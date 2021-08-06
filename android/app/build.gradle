@@ -32,6 +32,11 @@ android {
         main.java.srcDirs += 'src/main/kotlin'
     }
 
+    lintOptions {
+        disable 'InvalidPackage'
+        checkReleaseBuilds false //<- add this line
+    }
+
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId "com.alpinnz.tracking"
@@ -39,6 +44,7 @@ android {
         targetSdkVersion 30
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
+        multiDexEnabled true
     }
 
     buildTypes {
@@ -46,6 +52,25 @@ android {
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig signingConfigs.debug
+            minifyEnabled false
+            shrinkResources false
+        }
+    }
+
+    flavorDimensions "app"
+
+    productFlavors {
+        user {
+            dimension "app"
+            resValue "string", "app_name", "Tracking Children"
+            applicationIdSuffix ".user"
+          
+        }
+        admin {
+            dimension "app"
+            resValue "string", "app_name", "Tracking Children Admin"
+            applicationIdSuffix ".admin"
+         
         }
     }
 }
@@ -56,4 +81,10 @@ flutter {
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation 'com.android.support:multidex:1.0.3'
+    // Firebase
+    implementation platform('com.google.firebase:firebase-bom:25.12.0')
 }
+
+// Firebase
+apply plugin: 'com.google.gms.google-services'
