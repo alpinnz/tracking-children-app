@@ -13,8 +13,7 @@ import 'package:tracking/main_user.dart';
 
 import '../models/location_model.dart';
 import '../models/user_model.dart';
-import '../services/get_location_service.dart';
-import '../services/location_service.dart';
+import '../services/geolocator_service.dart';
 
 class UserDashboardScreen extends StatefulWidget {
   final UserModel userModel;
@@ -41,7 +40,7 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
     isAktif = false;
     initialLocation = CameraPosition(target: LatLng(-6.170166, 106.831375), zoom: 18);
 
-    // initCheck();
+    initCheck();
 
     super.initState();
   }
@@ -53,13 +52,9 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
         isSend = true;
         isAktif = true;
       });
-      FlutterBackgroundService().sendData(
-        {"action": "startService", "UserModel": widget.userModel.toJson()},
-      );
+      authService.setIsSend(value: true);
     } else {
-      FlutterBackgroundService().sendData(
-        {"action": "stopService"},
-      );
+      authService.setIsSend(value: false);
     }
   }
 
@@ -71,13 +66,13 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
         ),
       );
 
-      if (isSend) {
-        locationModel.createdAt = DateTime.now().millisecondsSinceEpoch;
-        locationModel.updatedAt = DateTime.now().millisecondsSinceEpoch;
-        LocationService.saveLocation(locationModel: locationModel);
+      // if (isSend) {
+      //   locationModel.createdAt = DateTime.now().millisecondsSinceEpoch;
+      //   locationModel.updatedAt = DateTime.now().millisecondsSinceEpoch;
+      //   LocationService.saveLocation(locationModel: locationModel);
 
-        print('sendLocationModel -> ${locationModel.createdAt}');
-      }
+      //   print('sendLocationModel -> ${locationModel.createdAt}');
+      // }
 
       print('updateGMAP -> ${locationModel.address.streetAddress}');
     }
@@ -85,7 +80,7 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    Stream<LocationModel> getLocationStream = GetLocationService(uid: widget.userModel.uid).locationStream;
+    Stream<LocationModel> getLocationStream = GeolocatorService(uid: widget.userModel.uid).locationStream;
 
     return CWillPopScope(
       child: Scaffold(
@@ -203,24 +198,14 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
                 label: 'Kirim ke Orang Tua',
                 onPressed: () async {
                   if (isAktif) {
-                    var isRunning = await FlutterBackgroundService().isServiceRunning();
-                    if (isRunning) {
-                      FlutterBackgroundService().sendData(
-                        {"action": "stopService"},
-                      );
-                    } else {
-                      FlutterBackgroundService.initialize(onStart, autoStart: true, foreground: false);
-                      FlutterBackgroundService().sendData(
-                        {"action": "startService", "UserModel": widget.userModel.toJson()},
-                      );
-                    }
-                    if (!isRunning) {
+                    if (!isSend) {
                       authService.setIsSend(value: true);
                       setState(() {
                         isSend = true;
                       });
                     } else {
                       authService.setIsSend(value: false);
+
                       setState(() {
                         isSend = false;
                       });
