@@ -8,6 +8,7 @@ class LocationService {
   static const LocationCollection = 'locations';
 
   static saveLocation({@required LocationModel locationModel}) async {
+    print(locationModel.toJson().toString());
     _db.collection(LocationCollection).add(locationModel.toJson());
   }
 }

@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:tracking/bloc/app/app_bloc.dart';
+
+import '../bloc/app/app_bloc.dart';
 
 enum CAppBarActions { Logout }
 
 class CAppBar extends StatelessWidget {
   final String title;
   final List<CAppBarActions> actions;
+  final isHistory;
 
-  CAppBar({Key key, @required this.title, this.actions}) : super(key: key);
+  CAppBar({Key key, @required this.title, this.actions, this.isHistory = false}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -32,8 +34,15 @@ class CAppBar extends StatelessWidget {
       backgroundColor: Colors.redAccent,
       title: Row(
         children: [
-          Icon(Icons.person),
-          SizedBox(width: 8),
+          if (isHistory)
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: Text('History'),
+            ),
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: Text('User'),
+          ),
           Text(title),
         ],
       ),

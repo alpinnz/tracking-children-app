@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:tracking/bloc/login/login_bloc.dart';
-import 'package:tracking/services/auth_service.dart';
-import 'package:tracking/widget/c_button.dart';
-import 'package:tracking/widget/c_input.dart';
+import '../bloc/app/app_bloc.dart';
+
+import '../bloc/login/login_bloc.dart';
 import '../config/flavor_config.dart';
+import '../services/auth_service.dart';
+import '../widget/c_button.dart';
+import '../widget/c_input.dart';
+import '../widget/c_will_pop_scope.dart';
 import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -16,33 +19,18 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final AuthService authService = AuthService();
+  final formKey = GlobalKey<FormState>();
 
-  DateTime currentBackPressTime;
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
-
-  Future<bool> onWillPop() {
-    DateTime now = DateTime.now();
-    if (currentBackPressTime == null || now.difference(currentBackPressTime) > Duration(seconds: 2)) {
-      currentBackPressTime = now;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Press back again to leave')),
-      );
-      return Future.value(false);
-    }
-    return Future.value(true);
-  }
-
-  final formKey = GlobalKey<FormState>();
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => LoginBloc(authService: authService),
+      create: (context) => LoginBloc(authService: authService, appBloc: BlocProvider.of<AppBloc>(context)),
       child: Scaffold(
         backgroundColor: Colors.redAccent,
-        body: WillPopScope(
-          onWillPop: onWillPop,
+        body: CWillPopScope(
           child: SafeArea(
             child: Padding(
               padding: EdgeInsets.all(20),
@@ -124,11 +112,18 @@ class _LoginScreenState extends State<LoginScreen> {
                                     SnackBar(content: Text(state.error)),
                                   );
                                 }
+
+                                if (state is LoginSuccessState) {
+                                  ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('Masuk telah berhasil!!!')),
+                                  );
+                                }
                               },
                               builder: (context, state) {
                                 return CButton(
                                   loading: state is LoginLoadingState,
-                                  label: 'Login',
+                                  label: 'Masuk',
                                   onPressed: () {
                                     if (state is! LoginLoadingState) {
                                       if (formKey.currentState.validate()) {
@@ -162,7 +157,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         children: <Widget>[
                           if (FlavorConfig.isUser())
                             Text(
-                              'Don\'t have account ?',
+                              'Tidak punya akun ?',
                               style: TextStyle(color: Colors.white),
                             ),
                           if (FlavorConfig.isUser())
@@ -171,7 +166,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 Navigator.push(context, MaterialPageRoute(builder: (context) => RegisterScreen()));
                               },
                               child: Text(
-                                'Register Now',
+                                'Dafta sekarang',
                                 style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
                               ),
                             ),

@@ -2,9 +2,10 @@ import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:tracking/bloc/app/app_bloc.dart';
+import '../widget/c_app_bar.dart';
+import '../widget/c_button.dart';
+import '../widget/c_will_pop_scope.dart';
 
 import '../models/location_model.dart';
 import '../models/user_model.dart';
@@ -19,19 +20,9 @@ class AdminDashboardScreen extends StatefulWidget {
 }
 
 class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
-  final ButtonStyle raisedButtonStyle = ElevatedButton.styleFrom(
-    onPrimary: Colors.black87,
-    primary: Color(0xFF4f4f4f),
-    minimumSize: Size(double.infinity, 45),
-    padding: EdgeInsets.symmetric(horizontal: 16),
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.all(Radius.circular(8)),
-    ),
-  );
-  DateTime currentBackPressTime;
-
   bool isLoading;
   bool isGet;
+  bool isHistory;
 
   Marker marker;
   Circle circle;
@@ -44,23 +35,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   final Stream<QuerySnapshot> locationsStream = FirebaseFirestore.instance.collection('locations').snapshots();
 
-  Future<bool> onWillPop() {
-    DateTime now = DateTime.now();
-    if (currentBackPressTime == null || now.difference(currentBackPressTime) > Duration(seconds: 2)) {
-      currentBackPressTime = now;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Press back again to leave')),
-      );
-      return Future.value(false);
-    }
-    return Future.value(true);
-  }
-
   @override
   void initState() {
     super.initState();
+
     isLoading = false;
     isGet = false;
+    isHistory = false;
     initialLocation = CameraPosition(target: LatLng(-6.170166, 106.831375), zoom: 18);
   }
 
@@ -106,12 +87,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         );
 
         updateMarkerAndCircle(locationModel, imageData);
-        print(locationModel.toJson().toString());
+        // print(locationModel.toJson().toString());
       }
 
       await Future.delayed(Duration(seconds: 5));
+
       setState(() {
         isLoading = false;
+        isHistory = true;
       });
     }
   }
@@ -120,25 +103,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      appBar: AppBar(
-        title: Row(
-          children: [
-            Icon(Icons.person),
-            SizedBox(width: 8),
-            Text('${widget.userModel.username}'),
-          ],
+      appBar: PreferredSize(
+        preferredSize: Size(double.infinity, kToolbarHeight),
+        child: CAppBar(
+          title: widget.userModel.username,
+          actions: [CAppBarActions.Logout],
         ),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.logout),
-            onPressed: () async {
-              BlocProvider.of<AppBloc>(context)..add(AppLogoutEvent());
-            },
-          ),
-        ],
       ),
-      body: WillPopScope(
-        onWillPop: onWillPop,
+      body: CWillPopScope(
         child: Padding(
           padding: EdgeInsets.all(20),
           child: Column(
@@ -164,45 +136,53 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                       }
                     });
                     List<String> listUsername = userModels.map((e) => e.username).toList();
+
                     userModels.add(UserModel(username: 'Username'));
                     return DropdownButton<String>(
-                      value: listUsername.contains(selectedUsername) ? selectedUsername : listUsername[0],
+                      value: listUsername.contains(selectedUsername) ? selectedUsername : null,
                       icon: Icon(Icons.arrow_drop_down_sharp),
+                      hint: Text('pilih anak', style: TextStyle(color: Colors.grey)),
                       isExpanded: true,
+                      items: listUsername.map((String item) {
+                        return DropdownMenuItem<String>(
+                          child: Row(
+                            children: [
+                              Icon(Icons.person, color: Colors.redAccent, size: 20),
+                              SizedBox(width: 8),
+                              Text(item, style: TextStyle(color: item == selectedUsername ? Colors.black87 : Colors.grey)),
+                            ],
+                          ),
+                          value: item,
+                        );
+                      }).toList(),
                       iconSize: 24,
                       elevation: 16,
-                      style: TextStyle(color: Colors.deepPurple),
+                      style: TextStyle(color: Colors.white),
                       underline: Container(
-                        height: 2,
-                        color: Colors.deepPurpleAccent,
+                        height: 1,
+                        color: Colors.redAccent,
                       ),
                       onChanged: (String newValue) {
                         print(newValue);
                         setState(() {
                           selectedUsername = newValue;
                           selectedUserModel = userModels.singleWhere((e) => e.username == newValue);
+                          isGet = false;
+                          isHistory = false;
                         });
                       },
-                      items: listUsername.map<DropdownMenuItem<String>>((String value) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value),
-                        );
-                      }).toList(),
                     );
                   }),
               SizedBox(height: 16),
-              ElevatedButton(
-                style: raisedButtonStyle,
-                onPressed: () {
+              CButton(
+                disabled: !isGet,
+                label: 'Posisi Anak',
+                onPressed: () async {
+                  locationsStream.asBroadcastStream();
                   setState(() {
-                    isGet = !isGet;
+                    isGet = true;
                   });
                 },
-                child: Text(
-                  'Posisi Anak',
-                  style: TextStyle(color: Colors.white),
-                ),
               ),
               SizedBox(height: 16),
               Row(
@@ -210,7 +190,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   Text(
                     'Lokasi Anak Pada Peta',
                     style: TextStyle(
-                      color: Colors.blueAccent,
+                      color: Colors.redAccent,
                       fontSize: 24,
                       fontWeight: FontWeight.w900,
                       letterSpacing: 1.5,
@@ -220,7 +200,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   Expanded(
                     child: Divider(
                       thickness: 3,
-                      color: Colors.blueAccent,
+                      color: Colors.redAccent,
                     ),
                   ),
                 ],
@@ -230,52 +210,63 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   stream: locationsStream,
                   builder: (context, snapshot) {
                     if (snapshot.hasData) {
-                      List<LocationModel> listLocationModel = snapshot.data.docs.map((e) => LocationModel.fromJson(e.data())).toList();
-                      listLocationModel.sort((a, b) => a.createdAt.compareTo(b.createdAt));
-                      List<LocationModel> userLocationModel =
-                          listLocationModel.where((e) => e.uid == (selectedUserModel != null ? selectedUserModel.uid : 'not found')).toList();
-                      // userLocationModel.forEach((e) {
-                      //   print(DateTime.fromMillisecondsSinceEpoch(e.createdAt));
-                      // });
-                      if (userLocationModel.length > 1) {
-                        getCurrentLocation(userLocationModel.last);
+                      if (selectedUserModel != null) {
+                        List<LocationModel> listLocationModel = snapshot.data.docs.map((e) => LocationModel.fromJson(e.data())).toList();
+                        listLocationModel.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+                        List<LocationModel> userLocationModel =
+                            listLocationModel.where((e) => e.uid == (selectedUserModel != null ? selectedUserModel.uid : 'not found')).toList();
+                        if (isGet) {
+                          print('get location ');
+                          Future.delayed(Duration(seconds: 3), () {
+                            getCurrentLocation(userLocationModel.last);
+                          });
+                          if (userLocationModel.length > 1) {
+                            return Expanded(
+                              child: Container(
+                                width: double.infinity,
+                                child: GoogleMap(
+                                  mapType: MapType.hybrid,
+                                  initialCameraPosition: initialLocation,
+                                  markers: Set.of((marker != null) ? [marker] : []),
+                                  circles: Set.of((circle != null) ? [circle] : []),
+                                  compassEnabled: false,
+                                  onMapCreated: (GoogleMapController _controller) {
+                                    controller = _controller;
+                                  },
+                                ),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: Colors.redAccent,
+                                    width: 1,
+                                  ),
+                                ),
+                              ),
+                            );
+                          } else {
+                            return Expanded(
+                              child: Center(child: Text('data lokasi anak ${selectedUserModel.username} tidak ada')),
+                            );
+                          }
+                        } else {
+                          return Expanded(
+                            child: Center(child: Text('tekan tombol Posisi Anak')),
+                          );
+                        }
                       }
                     }
-
-                    return Expanded(
-                      child: Container(
-                        width: double.infinity,
-                        child: GoogleMap(
-                          mapType: MapType.hybrid,
-                          initialCameraPosition: initialLocation,
-                          markers: Set.of((marker != null) ? [marker] : []),
-                          circles: Set.of((circle != null) ? [circle] : []),
-                          compassEnabled: false,
-                          onMapCreated: (GoogleMapController controller) {
-                            controller = controller;
-                          },
-                        ),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: Colors.blueAccent,
-                            width: 1,
-                          ),
-                        ),
-                      ),
-                    );
+                    return Expanded(child: Center(child: Text('Pilih anak')));
                   }),
               SizedBox(height: 20),
-              ElevatedButton(
-                style: raisedButtonStyle,
-                onPressed: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => AdminHistoryScreen(userModel: selectedUserModel)));
+              CButton(
+                disabled: !isHistory || selectedUserModel == null,
+                label: 'History Lokasi',
+                onPressed: () async {
+                  if (isHistory && selectedUserModel != null) {
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => AdminHistoryScreen(userModel: selectedUserModel)));
+                  }
                 },
-                child: Text(
-                  'History Lokasi',
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
+              )
             ],
           ),
         ),

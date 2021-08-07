@@ -1,39 +1,37 @@
 import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
-import 'package:geocoder/geocoder.dart';
+import 'package:flutter/material.dart';
+import 'package:geocode/geocode.dart' as geocode;
 import 'package:location/location.dart';
 
 import '../models/location_model.dart';
 
 class GetLocationService {
   final String uid;
-  LocationModel _currentLocation;
-  var location = Location();
+  Location location = Location();
 
   StreamController<LocationModel> _locationController = StreamController<LocationModel>();
   Stream<LocationModel> get locationStream => _locationController.stream;
 
   GetLocationService({@required this.uid}) {
-    location.serviceEnabled();
     // Request permission to use location
     location.requestPermission().then((granted) {
       if (granted != null) {
-        // If granted listen to the onLocationChanged stream and emit over our controller
-        location.onLocationChanged().listen((locationData) async {
-          if (locationData != null) {
-            final address = await getAddress(latitude: locationData.latitude, longitude: locationData.longitude);
+        location.onLocationChanged.listen((LocationData currentLocation) async {
+          if (currentLocation != null) {
+            final address = await getAddress(latitude: currentLocation.latitude, longitude: currentLocation.longitude);
             if (address is Address) {
               _locationController.add(
                 LocationModel(
                   uid: uid,
-                  accuracy: locationData.accuracy,
-                  altitude: locationData.altitude,
-                  heading: locationData.heading,
-                  latitude: locationData.latitude,
-                  longitude: locationData.longitude,
-                  speed: locationData.speed,
-                  speedAccuracy: locationData.speedAccuracy,
+                  accuracy: currentLocation.accuracy,
+                  altitude: currentLocation.altitude,
+                  heading: currentLocation.heading,
+                  latitude: currentLocation.latitude,
+                  longitude: currentLocation.longitude,
+                  speed: currentLocation.speed,
+                  speedAccuracy: currentLocation.speedAccuracy,
                   address: address,
                   createdAt: DateTime.now().millisecondsSinceEpoch,
                   updatedAt: DateTime.now().millisecondsSinceEpoch,
@@ -47,8 +45,9 @@ class GetLocationService {
   }
 
   Future<dynamic> getLocation() async {
-    location.serviceEnabled();
     try {
+      location.enableBackgroundMode(enable: true);
+      print('getLocation ' + location.isBackgroundModeEnabled().toString());
       LocationModel locationModel;
 
       var userLocation = await location.getLocation();
@@ -71,7 +70,6 @@ class GetLocationService {
         );
       }
 
-      print('teeee' + locationModel.toJson().toString());
       return locationModel;
     } on Exception catch (e) {
       print('Could not get location: ${e.toString()}');
@@ -79,13 +77,29 @@ class GetLocationService {
   }
 
   Future<Address> getAddress({@required double latitude, @required double longitude}) async {
-    final coordinates = new Coordinates(latitude, longitude);
-    var addresses = await Geocoder.local.findAddressesFromCoordinates(coordinates);
+    try {
+      final String apiKey = 'AIzaSyBNPVnDltdELSusjJiacUGjuPdNmn0yCMQ';
+      final address = await geocode.GeoCode(apiKey: apiKey).reverseGeocoding(latitude: latitude, longitude: longitude);
 
-    if (addresses is List<Address>) {
-      var first = addresses.first;
-      return first;
+      if (address is geocode.Address) {
+        return Address(
+          elevation: address.elevation,
+          timezone: address.timezone,
+          geoNumber: address.geoNumber,
+          streetNumber: address.streetNumber,
+          streetAddress: address.streetAddress,
+          city: address.city,
+          countryCode: address.countryCode,
+          countryName: address.countryName,
+          region: address.region,
+          postal: address.postal,
+          distance: address.distance,
+        );
+      }
+      return null;
+    } catch (e) {
+      print('getAddress : ${e.toString()}');
+      return null;
     }
-    return null;
   }
 }

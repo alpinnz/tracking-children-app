@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../bloc/register/register_bloc.dart';
+import '../services/auth_service.dart';
+import '../widget/c_button.dart';
+import '../widget/c_input.dart';
 
 class RegisterScreen extends StatefulWidget {
   RegisterScreen({Key key}) : super(key: key);
@@ -9,265 +14,163 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   final formKey = GlobalKey<FormState>();
+  final AuthService authService = AuthService();
 
   TextEditingController usernameController = TextEditingController();
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
-  TextEditingController confirmPasswordController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.blueAccent,
-      body: SafeArea(
-        child: Padding(
-          padding: EdgeInsets.all(20),
-          child: CustomScrollView(
-            slivers: <Widget>[
-              SliverList(
-                delegate: SliverChildListDelegate([
-                  Row(
-                    children: <Widget>[
-                      Text(
-                        'Daftar anak',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 36,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 1.5,
-                        ),
-                      ),
-                      SizedBox(width: 16),
-                      Expanded(
-                        child: Divider(
-                          thickness: 3,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Text(
-                    'Selamat datang',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w300,
-                      fontSize: 24,
-                      letterSpacing: 5,
-                    ),
-                  ),
-                  SizedBox(height: 40),
-                  Form(
-                    key: formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+    return BlocProvider(
+      create: (context) => RegisterBloc(authService: authService),
+      child: Scaffold(
+        backgroundColor: Colors.redAccent,
+        body: SafeArea(
+          child: Padding(
+            padding: EdgeInsets.all(20),
+            child: CustomScrollView(
+              slivers: <Widget>[
+                SliverList(
+                  delegate: SliverChildListDelegate([
+                    Row(
                       children: <Widget>[
                         Text(
-                          'Username',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                        SizedBox(height: 8),
-                        TextFormField(
-                          controller: usernameController,
-                          keyboardType: TextInputType.emailAddress,
-                          decoration: InputDecoration(
-                            hintText: 'Username',
-                            fillColor: Colors.white,
-                            filled: true,
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(
-                                color: Colors.white,
-                              ),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(
-                                color: Colors.white,
-                              ),
-                            ),
-                            contentPadding: EdgeInsets.symmetric(vertical: 4, horizontal: 16),
+                          'Daftar anak',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 36,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 1.5,
                           ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter some text';
-                            }
-                            return null;
-                          },
                         ),
-                        SizedBox(height: 16),
-                        Text(
-                          'Email',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                        SizedBox(height: 8),
-                        TextFormField(
-                          controller: emailController,
-                          keyboardType: TextInputType.emailAddress,
-                          decoration: InputDecoration(
-                            hintText: 'Email',
-                            fillColor: Colors.white,
-                            filled: true,
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(
-                                color: Colors.white,
-                              ),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(
-                                color: Colors.white,
-                              ),
-                            ),
-                            contentPadding: EdgeInsets.symmetric(vertical: 4, horizontal: 16),
+                        SizedBox(width: 16),
+                        Expanded(
+                          child: Divider(
+                            thickness: 3,
+                            color: Colors.white,
                           ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter some text';
-                            }
-                            return null;
-                          },
                         ),
-                        SizedBox(height: 16),
-                        Text(
-                          'Password',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                        SizedBox(height: 8),
-                        TextFormField(
-                          controller: passwordController,
-                          obscureText: true,
-                          decoration: InputDecoration(
-                            hintText: 'Password',
-                            fillColor: Colors.white,
-                            filled: true,
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(
-                                color: Colors.white,
-                              ),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(
-                                color: Colors.white,
-                              ),
-                            ),
-                            contentPadding: EdgeInsets.symmetric(vertical: 4, horizontal: 16),
+                      ],
+                    ),
+                    Text(
+                      'Selamat datang',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w300,
+                        fontSize: 24,
+                        letterSpacing: 5,
+                      ),
+                    ),
+                    SizedBox(height: 40),
+                    Form(
+                      key: formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          CInput(
+                            label: 'Username',
+                            onChanged: (controller) {
+                              setState(() {
+                                controller = usernameController;
+                              });
+                            },
+                            controller: usernameController,
                           ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter some text';
-                            }
-                            return null;
-                          },
-                        ),
-                        SizedBox(height: 16),
-                        Text(
-                          'Password Confirm',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                        SizedBox(height: 8),
-                        TextFormField(
-                          controller: confirmPasswordController,
-                          obscureText: true,
-                          decoration: InputDecoration(
-                            hintText: 'Password Confirm',
-                            fillColor: Colors.white,
-                            filled: true,
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(
-                                color: Colors.white,
-                              ),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(
-                                color: Colors.white,
-                              ),
-                            ),
-                            contentPadding: EdgeInsets.symmetric(vertical: 4, horizontal: 16),
+                          SizedBox(height: 16),
+                          CInput(
+                            label: 'Email',
+                            onChanged: (controller) {
+                              setState(() {
+                                controller = emailController;
+                              });
+                            },
+                            controller: emailController,
                           ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter some text';
-                            }
-                            return null;
-                          },
-                        ),
-                        SizedBox(height: 20),
-                        Container(
-                          width: double.infinity,
-                          child: RaisedButton(
-                            onPressed: () async {
-                              if (confirmPasswordController.text.isEmpty || passwordController.text != confirmPasswordController.text) {
-                                print("confirm password does not match");
-                                return;
-                              }
-                              try {
-                                // final user = await AuthService.signupWithEmail(
-                                //     username: usernameController.text, email: emailController.text, password: passwordController.text);
-                                // if (user != null) {
-                                //   ScaffoldMessenger.of(context).showSnackBar(
-                                //     const SnackBar(content: Text('register successful')),
-                                //   );
-                                //   Navigator.pop(context);
-                                // } else {
-                                //   ScaffoldMessenger.of(context).showSnackBar(
-                                //     const SnackBar(content: Text('register failed')),
-                                //   );
-                                // }
-                              } catch (e) {
+                          SizedBox(height: 16),
+                          CInput(
+                            label: 'Password',
+                            obscureText: true,
+                            onChanged: (controller) {
+                              setState(() {
+                                controller = passwordController;
+                              });
+                            },
+                            controller: passwordController,
+                          ),
+                          SizedBox(height: 20),
+                          BlocConsumer<RegisterBloc, RegisterState>(
+                            listener: (context, state) {
+                              if (state is RegisterFailedState) {
+                                ScaffoldMessenger.of(context).hideCurrentSnackBar();
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('error $e')),
+                                  SnackBar(content: Text(state.error)),
+                                );
+                              }
+
+                              if (state is RegisterSuccessState) {
+                                Navigator.of(context).pop();
+                                ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Daftar telah berhasil!!!')),
                                 );
                               }
                             },
-                            child: Text(
-                              'Register',
-                              style: TextStyle(color: Colors.white),
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            color: Color(0xFF4f4f4f),
-                            elevation: 0,
-                            padding: EdgeInsets.symmetric(vertical: 16),
+                            builder: (context, state) {
+                              return CButton(
+                                loading: state is RegisterLoadingState,
+                                label: 'Daftar',
+                                onPressed: () {
+                                  if (state is! RegisterLoadingState) {
+                                    if (formKey.currentState.validate()) {
+                                      String username = usernameController.text;
+                                      String email = emailController.text;
+                                      String password = passwordController.text;
+                                      context.read<RegisterBloc>()..add(RegisterSubmitEvent(username: username, email: email, password: password));
+                                    } else {
+                                      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(content: Text('tidak boleh kosong username, email, password')),
+                                      );
+                                    }
+                                  }
+                                },
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 20),
+                  ]),
+                ),
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Container(
+                    alignment: Alignment.bottomCenter,
+                    margin: EdgeInsets.only(bottom: 20),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        Text(
+                          'Sudah memiliki akun ?',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.of(context).pop();
+                          },
+                          child: Text(
+                            'Masuk',
+                            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
                           ),
                         ),
                       ],
                     ),
                   ),
-                  SizedBox(height: 20),
-                ]),
-              ),
-              SliverFillRemaining(
-                hasScrollBody: false,
-                child: Container(
-                  alignment: Alignment.bottomCenter,
-                  margin: EdgeInsets.only(bottom: 20),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: <Widget>[
-                      Text(
-                        'Already have an Account ?',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.of(context).pop();
-                        },
-                        child: Text(
-                          'Login',
-                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              )
-            ],
+                )
+              ],
+            ),
           ),
         ),
       ),

@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../models/location_model.dart';
 import '../models/user_model.dart';
+import '../widget/c_app_bar.dart';
 
 class AdminHistoryScreen extends StatefulWidget {
   final UserModel userModel;
@@ -18,28 +19,145 @@ class _AdminHistoryScreenState extends State<AdminHistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    void modalDetail(LocationModel locationModel) {
+      showModalBottomSheet(
+        context: context,
+        builder: (builder) {
+          return Container(
+            color: Colors.transparent,
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  topLeft: const Radius.circular(8.0),
+                  topRight: const Radius.circular(8.0),
+                ),
+              ),
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Text(
+                      "Data Lengkap",
+                      style: TextStyle(
+                        color: Colors.black54,
+                        fontSize: 17,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  Divider(),
+                  SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Tanggal',
+                        style: TextStyle(
+                          color: Colors.grey,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        DateFormat('kk:mm:ss dd-MM-yyyy').format(DateTime.fromMillisecondsSinceEpoch(locationModel.createdAt)),
+                        style: TextStyle(
+                          color: Colors.grey,
+                          fontSize: 14,
+                          fontWeight: FontWeight.normal,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Column(
+                    children: locationModel.address
+                        .toJson()
+                        .entries
+                        .toList()
+                        .map(
+                          (e) => Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                '',
+                                // e.key.toString(),
+                                style: TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                e.value.toString(),
+                                style: TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.normal,
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                        .toList(),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      );
+    }
+
     return Scaffold(
-      appBar: AppBar(
-        title: Text('History'),
+      resizeToAvoidBottomInset: false,
+      appBar: PreferredSize(
+        preferredSize: Size(double.infinity, kToolbarHeight),
+        child: CAppBar(
+          title: widget.userModel.username,
+          isHistory: true,
+        ),
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: locationsStream,
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             List<LocationModel> listLocationModel = snapshot.data.docs.map((e) => LocationModel.fromJson(e.data())).toList();
-            listLocationModel.sort((a, b) => a.createdAt.compareTo(b.createdAt));
-            List<LocationModel> userLocationModel = listLocationModel.where((e) => e.uid == widget.userModel.uid).toList();
-            // userLocationModel.forEach((e) {
-            //   print(DateTime.fromMillisecondsSinceEpoch(e.createdAt));
-            // });
+
+            print('address' + listLocationModel.last.address.toJson().toString());
+
+            List<LocationModel> userLocationModel = listLocationModel.where((e) => (e.uid == widget.userModel.uid) && (e.address != null)).toList();
+            userLocationModel.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
             return ListView.builder(
               itemCount: userLocationModel.length,
               padding: EdgeInsets.all(20),
               itemBuilder: (context, i) {
-                return ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: Text(DateFormat('kk:mm:ss\ndd-MM-yyyy').format(DateTime.fromMillisecondsSinceEpoch(userLocationModel[i].createdAt))),
-                  title: Text('${userLocationModel[i].address.addressLine}'),
+                return Column(
+                  children: [
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      minLeadingWidth: 55,
+                      // leading: Text(DateFormat('kk:mm:ss\ndd-MM-yyyy').format(DateTime.fromMillisecondsSinceEpoch(userLocationModel[i].createdAt))),
+                      leading: SizedBox(
+                        width: 55,
+                        child: Center(
+                          child: Text(
+                            DateFormat('kk:mm:ss').format(DateTime.fromMillisecondsSinceEpoch(userLocationModel[i].createdAt)).toString(),
+                            style: TextStyle(fontSize: 14),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                      title: Text('${userLocationModel[i].address.streetAddress}'),
+                      subtitle: Text(
+                          '${userLocationModel[i].address.city}, ${userLocationModel[i].address.region} ,${userLocationModel[i].address.countryName}'),
+                      onTap: () {
+                        modalDetail(userLocationModel[i]);
+                      },
+                    ),
+                    Divider(),
+                  ],
                 );
               },
             );

@@ -41,7 +41,7 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
     isAktif = false;
     initialLocation = CameraPosition(target: LatLng(-6.170166, 106.831375), zoom: 18);
 
-    initCheck();
+    // initCheck();
 
     super.initState();
   }
@@ -63,7 +63,7 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
     }
   }
 
-  void updateGMAP(LocationModel locationModel, {bool isOneRun = false}) async {
+  void updateGMAP(LocationModel locationModel) async {
     if (controller != null) {
       controller.animateCamera(
         CameraUpdate.newCameraPosition(
@@ -71,12 +71,22 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
         ),
       );
 
-      print('updateGMAP -> userDashboard');
+      if (isSend) {
+        locationModel.createdAt = DateTime.now().millisecondsSinceEpoch;
+        locationModel.updatedAt = DateTime.now().millisecondsSinceEpoch;
+        LocationService.saveLocation(locationModel: locationModel);
+
+        print('sendLocationModel -> ${locationModel.createdAt}');
+      }
+
+      print('updateGMAP -> ${locationModel.address.streetAddress}');
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    Stream<LocationModel> getLocationStream = GetLocationService(uid: widget.userModel.uid).locationStream;
+
     return CWillPopScope(
       child: Scaffold(
         resizeToAvoidBottomInset: false,
@@ -97,6 +107,7 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
                 label: 'Aktifkan GPS',
                 onPressed: () async {
                   setState(() {
+                    getLocationStream.asBroadcastStream();
                     isAktif = true;
                   });
                 },
@@ -124,10 +135,9 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
               ),
               SizedBox(height: 20),
               StreamBuilder<LocationModel>(
-                  stream: GetLocationService(uid: widget.userModel.uid).locationStream,
+                  stream: getLocationStream,
                   builder: (context, snapshot) {
                     if (snapshot.hasData) {
-                      // print(snapshot.data.toJson().toString());
                       if (isAktif) {
                         updateGMAP(snapshot.data);
                       }
@@ -142,7 +152,7 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
                               height: MediaQuery.of(context).size.height * 0.125,
                               padding: EdgeInsets.all(16),
                               child: Text(
-                                snapshot.hasData && isAktif ? snapshot.data.address.addressLine : 'not address',
+                                snapshot.hasData && isAktif ? snapshot.data.address.streetAddress : 'not address',
                                 style: TextStyle(
                                   color: Colors.black87,
                                   fontSize: 12,
@@ -199,7 +209,7 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
                         {"action": "stopService"},
                       );
                     } else {
-                      FlutterBackgroundService.initialize(onStart);
+                      FlutterBackgroundService.initialize(onStart, autoStart: true, foreground: false);
                       FlutterBackgroundService().sendData(
                         {"action": "startService", "UserModel": widget.userModel.toJson()},
                       );

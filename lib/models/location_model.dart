@@ -1,5 +1,3 @@
-import 'package:geocoder/model.dart';
-
 class LocationModel {
   String uid;
   double accuracy;
@@ -35,7 +33,7 @@ class LocationModel {
     heading = json['heading'];
     speed = json['speed'];
     speedAccuracy = json['speedAccuracy'];
-    address = json['address'] != null ? new Address.fromMap(json['address']) : null;
+    address = json['address'] != null ? new Address.fromJson(json['address']) : null;
     createdAt = json['created_at'];
     updatedAt = json['updated_at'];
   }
@@ -51,10 +49,68 @@ class LocationModel {
     data['speed'] = this.speed;
     data['speedAccuracy'] = this.speedAccuracy;
     if (this.address != null) {
-      data['address'] = this.address.toMap();
+      data['address'] = this.address.toJson();
     }
     data['created_at'] = this.createdAt;
     data['updated_at'] = this.updatedAt;
+    return data;
+  }
+}
+
+class Address {
+  double elevation;
+  String timezone;
+  int geoNumber;
+  int streetNumber;
+  String streetAddress;
+  String city;
+  String countryCode;
+  String countryName;
+  String region;
+  String postal;
+  double distance;
+
+  Address({
+    this.elevation,
+    this.timezone,
+    this.geoNumber,
+    this.streetNumber,
+    this.streetAddress,
+    this.city,
+    this.countryCode,
+    this.countryName,
+    this.region,
+    this.postal,
+    this.distance,
+  });
+
+  Address.fromJson(Map<String, dynamic> json) {
+    elevation = json['elevation'];
+    timezone = json['timezone'];
+    geoNumber = json['geoNumber'];
+    streetNumber = json['streetNumber'];
+    streetAddress = json['streetAddress'];
+    city = json['city'];
+    countryCode = json['countryCode'];
+    countryName = json['countryName'];
+    region = json['region'];
+    postal = json['postal'];
+    distance = json['distance'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = new Map<String, dynamic>();
+    data['elevation'] = this.elevation;
+    data['timezone'] = this.timezone;
+    data['geoNumber'] = this.geoNumber;
+    data['streetNumber'] = this.streetNumber;
+    data['streetAddress'] = this.streetAddress;
+    data['city'] = this.city;
+    data['countryCode'] = this.countryCode;
+    data['countryName'] = this.countryName;
+    data['region'] = this.region;
+    data['postal'] = this.postal;
+    data['distance'] = this.distance;
     return data;
   }
 }
