@@ -55,11 +55,32 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
 
         yield LoginFailedState(error: 'gagal login');
       } on FirebaseAuthException catch (e) {
-        if (e.code == 'user-not-found') {
-          yield LoginFailedState(error: 'data tidak ada');
-        } else if (e.code == 'wrong-password') {
-          yield LoginFailedState(error: 'password salah');
+        String message;
+        switch (e.code) {
+          case 'invalid-email':
+            message = 'Email tidak valid';
+            break;
+          case 'weak-password':
+            message = 'Password minimal 6 karakter';
+            break;
+          case 'network-request-failed':
+            message = 'Kesalahan jaringan';
+            break;
+          case 'email-already-in-use':
+            message = 'Email telah digunakan';
+            break;
+          case 'user-not-found':
+            message = 'User tidak ditemukan';
+            break;
+          case 'wrong-password':
+            message = 'Password salah';
+            break;
+          default:
+            message = e.message;
+            break;
         }
+        yield LoginFailedState(error: '$message');
+        print({'code': e.code, 'message': e.message});
       } catch (e) {
         print(e.toString());
         yield LoginFailedState(error: e.toString());

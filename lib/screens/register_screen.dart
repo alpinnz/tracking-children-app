@@ -36,7 +36,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     Row(
                       children: <Widget>[
                         Text(
-                          'Daftar anak',
+                          'Register Anak',
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 36,
@@ -119,7 +119,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             builder: (context, state) {
                               return CButton(
                                 loading: state is RegisterLoadingState,
-                                label: 'Daftar',
+                                label: 'Register',
                                 onPressed: () {
                                   if (state is! RegisterLoadingState) {
                                     if (formKey.currentState.validate()) {
@@ -161,7 +161,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             Navigator.of(context).pop();
                           },
                           child: Text(
-                            'Masuk',
+                            'Login',
                             style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
                           ),
                         ),

@@ -31,11 +31,32 @@ class RegisterBloc extends Bloc<RegisterEvent, RegisterState> {
 
         yield RegisterFailedState(error: 'gagal Register');
       } on FirebaseAuthException catch (e) {
-        if (e.code == 'weak-password') {
-          yield RegisterFailedState(error: 'password lemah');
-        } else if (e.code == 'email-already-in-use') {
-          yield RegisterFailedState(error: 'email telah digunakan');
+        String message;
+        switch (e.code) {
+          case 'invalid-email':
+            message = 'Email tidak valid';
+            break;
+          case 'weak-password':
+            message = 'Password minimal 6 karakter';
+            break;
+          case 'network-request-failed':
+            message = 'Kesalahan jaringan';
+            break;
+          case 'email-already-in-use':
+            message = 'Email telah digunakan';
+            break;
+          case 'user-not-found':
+            message = 'User tidak ditemukan';
+            break;
+          case 'wrong-password':
+            message = 'Password salah';
+            break;
+          default:
+            message = e.message;
+            break;
         }
+        yield RegisterFailedState(error: '$message');
+        print({'code': e.code, 'message': e.message});
       } catch (e) {
         print(e.toString());
         yield RegisterFailedState(error: e.toString());

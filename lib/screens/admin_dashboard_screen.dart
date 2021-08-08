@@ -106,7 +106,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       appBar: PreferredSize(
         preferredSize: Size(double.infinity, kToolbarHeight),
         child: CAppBar(
-          title: widget.userModel.username,
+          title: 'Orang tua',
           actions: [CAppBarActions.Logout],
         ),
       ),
@@ -260,7 +260,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               SizedBox(height: 20),
               CButton(
                 disabled: !isHistory || selectedUserModel == null,
-                label: 'History Lokasi',
+                label: 'History lokasi anak',
                 onPressed: () async {
                   if (isHistory && selectedUserModel != null) {
                     Navigator.push(context, MaterialPageRoute(builder: (context) => AdminHistoryScreen(userModel: selectedUserModel)));

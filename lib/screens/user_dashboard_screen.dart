@@ -1,15 +1,14 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_background_service/flutter_background_service.dart';
-// import 'package:flutter_background_service/flutter_background_service.dart';
+import 'package:geocoding/geocoding.dart';
 
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:tracking/services/auth_service.dart';
 import 'package:tracking/widget/c_app_bar.dart';
 import 'package:tracking/widget/c_button.dart';
 import 'package:tracking/widget/c_will_pop_scope.dart';
-import 'package:tracking/main_user.dart';
 
 import '../models/location_model.dart';
 import '../models/user_model.dart';
@@ -29,8 +28,12 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
   bool isAktif;
   bool isSend;
   AuthService authService = AuthService();
+  Stream<LocationModel> getLocationStream;
 
   GoogleMapController controller;
+
+  Marker marker;
+  Circle circle;
   CameraPosition initialLocation;
 
   @override
@@ -38,11 +41,17 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
     isLoading = false;
     isSend = false;
     isAktif = false;
+
     initialLocation = CameraPosition(target: LatLng(-6.170166, 106.831375), zoom: 18);
 
     initCheck();
 
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 
   Future initCheck() async {
@@ -52,35 +61,68 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
         isSend = true;
         isAktif = true;
       });
-      authService.setIsSend(value: true);
-    } else {
-      authService.setIsSend(value: false);
     }
   }
 
+  Future<Uint8List> getMarker() async {
+    ByteData byteData = await DefaultAssetBundle.of(context).load("assets/icons/ic_person.png");
+    return byteData.buffer.asUint8List();
+  }
+
+  void updateMarkerAndCircle(LocationModel locationModel, Uint8List imageData) {
+    this.setState(() {
+      marker = Marker(
+          markerId: MarkerId("home"),
+          position: LatLng(locationModel.latitude, locationModel.longitude),
+          rotation: locationModel.heading,
+          draggable: false,
+          zIndex: 2,
+          flat: true,
+          anchor: Offset(0.5, 0.5),
+          icon: BitmapDescriptor.fromBytes(imageData));
+      circle = Circle(
+          circleId: CircleId("person"),
+          radius: locationModel.accuracy,
+          zIndex: 1,
+          strokeColor: Colors.redAccent,
+          center: LatLng(locationModel.latitude, locationModel.longitude),
+          fillColor: Colors.redAccent.withAlpha(70));
+    });
+  }
+
   void updateGMAP(LocationModel locationModel) async {
+    Uint8List imageData = await getMarker();
+
     if (controller != null) {
-      controller.animateCamera(
-        CameraUpdate.newCameraPosition(
-          CameraPosition(bearing: 192.8334901395799, target: LatLng(locationModel.latitude, locationModel.longitude), tilt: 0, zoom: 18),
-        ),
-      );
+      if (!isLoading) {
+        setState(() {
+          isLoading = true;
+        });
 
-      // if (isSend) {
-      //   locationModel.createdAt = DateTime.now().millisecondsSinceEpoch;
-      //   locationModel.updatedAt = DateTime.now().millisecondsSinceEpoch;
-      //   LocationService.saveLocation(locationModel: locationModel);
+        controller.animateCamera(
+          CameraUpdate.newCameraPosition(
+            CameraPosition(bearing: 192.8334901395799, target: LatLng(locationModel.latitude, locationModel.longitude), tilt: 0, zoom: 18),
+          ),
+        );
 
-      //   print('sendLocationModel -> ${locationModel.createdAt}');
-      // }
+        List<Placemark> placemarks = await placemarkFromCoordinates(locationModel.latitude, locationModel.longitude);
+        print('placemarks' + placemarks.first.toJson().toString());
 
-      print('updateGMAP -> ${locationModel.address.streetAddress}');
+        updateMarkerAndCircle(locationModel, imageData);
+        print('updateGMAP -> ${locationModel.address.streetAddress}');
+      }
+
+      await Future.delayed(Duration(seconds: 5));
+
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    Stream<LocationModel> getLocationStream = GeolocatorService(uid: widget.userModel.uid).locationStream;
+    getLocationStream = GeolocatorService(uid: widget.userModel.uid).locationStream;
 
     return CWillPopScope(
       child: Scaffold(
@@ -140,47 +182,15 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
                     return Expanded(
                       child: Container(
                         width: double.infinity,
-                        child: Column(
-                          children: [
-                            Container(
-                              width: double.infinity,
-                              height: MediaQuery.of(context).size.height * 0.125,
-                              padding: EdgeInsets.all(16),
-                              child: Text(
-                                snapshot.hasData && isAktif ? snapshot.data.address.streetAddress : 'not address',
-                                style: TextStyle(
-                                  color: Colors.black87,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w900,
-                                  letterSpacing: 1.5,
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              child: Container(
-                                width: double.infinity,
-                                child: GoogleMap(
-                                  mapType: MapType.hybrid,
-                                  initialCameraPosition: initialLocation,
-                                  onMapCreated: (GoogleMapController _controller) {
-                                    controller = _controller;
-                                  },
-                                  compassEnabled: false,
-                                  scrollGesturesEnabled: false,
-                                  trafficEnabled: false,
-                                  myLocationEnabled: false,
-                                  zoomGesturesEnabled: false,
-                                  mapToolbarEnabled: false,
-                                  zoomControlsEnabled: false,
-                                  myLocationButtonEnabled: false,
-                                  rotateGesturesEnabled: false,
-                                  tiltGesturesEnabled: false,
-                                  indoorViewEnabled: false,
-                                  liteModeEnabled: false,
-                                ),
-                              ),
-                            ),
-                          ],
+                        child: GoogleMap(
+                          mapType: MapType.hybrid,
+                          initialCameraPosition: initialLocation,
+                          markers: Set.of((marker != null) ? [marker] : []),
+                          circles: Set.of((circle != null) ? [circle] : []),
+                          compassEnabled: false,
+                          onMapCreated: (GoogleMapController _controller) {
+                            controller = _controller;
+                          },
                         ),
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(8),
@@ -198,18 +208,9 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
                 label: 'Kirim ke Orang Tua',
                 onPressed: () async {
                   if (isAktif) {
-                    if (!isSend) {
-                      authService.setIsSend(value: true);
-                      setState(() {
-                        isSend = true;
-                      });
-                    } else {
-                      authService.setIsSend(value: false);
-
-                      setState(() {
-                        isSend = false;
-                      });
-                    }
+                    setState(() {
+                      isSend = true;
+                    });
                   } else {
                     ScaffoldMessenger.of(context).hideCurrentSnackBar();
                     ScaffoldMessenger.of(context).showSnackBar(

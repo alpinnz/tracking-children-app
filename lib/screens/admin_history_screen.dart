@@ -114,8 +114,7 @@ class _AdminHistoryScreenState extends State<AdminHistoryScreen> {
       appBar: PreferredSize(
         preferredSize: Size(double.infinity, kToolbarHeight),
         child: CAppBar(
-          title: widget.userModel.username,
-          isHistory: true,
+          title: 'History lokasi ${widget.userModel.username}',
         ),
       ),
       body: StreamBuilder<QuerySnapshot>(
@@ -126,35 +125,39 @@ class _AdminHistoryScreenState extends State<AdminHistoryScreen> {
 
             print('address' + listLocationModel.last.address.toJson().toString());
 
-            List<LocationModel> userLocationModel = listLocationModel.where((e) => (e.uid == widget.userModel.uid) && (e.address != null)).toList();
-            userLocationModel.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+            List<LocationModel> listLocationModelByUser =
+                listLocationModel.where((e) => (e.uid == widget.userModel.uid) && (e.address != null)).toList();
+            listLocationModelByUser.sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
             return ListView.builder(
-              itemCount: userLocationModel.length,
+              itemCount: listLocationModelByUser.length,
               padding: EdgeInsets.all(20),
               itemBuilder: (context, i) {
+                LocationModel locationModel = listLocationModelByUser[i];
+                Address address = locationModel.address;
                 return Column(
                   children: [
                     ListTile(
                       contentPadding: EdgeInsets.zero,
                       minLeadingWidth: 55,
-                      // leading: Text(DateFormat('kk:mm:ss\ndd-MM-yyyy').format(DateTime.fromMillisecondsSinceEpoch(userLocationModel[i].createdAt))),
                       leading: SizedBox(
                         width: 55,
                         child: Center(
                           child: Text(
-                            DateFormat('kk:mm:ss').format(DateTime.fromMillisecondsSinceEpoch(userLocationModel[i].createdAt)).toString(),
+                            DateFormat('kk:mm:ss').format(DateTime.fromMillisecondsSinceEpoch(locationModel.createdAt)).toString(),
                             style: TextStyle(fontSize: 14),
                             textAlign: TextAlign.center,
                           ),
                         ),
                       ),
-                      title: Text('${userLocationModel[i].address.streetAddress}'),
-                      subtitle: Text(
-                          '${userLocationModel[i].address.city}, ${userLocationModel[i].address.region} ,${userLocationModel[i].address.countryName}'),
-                      onTap: () {
-                        modalDetail(userLocationModel[i]);
-                      },
+                      title: Text(
+                        '${address.streetAddress.replaceAll('Jalan', 'Jl')}, Rt/Rw, ${address.city}, ${address.region} ,${address.countryName}',
+                        style: TextStyle(fontSize: 14),
+                      ),
+                      // subtitle: Text('${address.city}, ${address.region} ,${address.countryName}'),
+                      // onTap: () {
+                      //   modalDetail(locationModel);
+                      // },
                     ),
                     Divider(),
                   ],

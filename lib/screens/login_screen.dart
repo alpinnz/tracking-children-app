@@ -123,7 +123,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               builder: (context, state) {
                                 return CButton(
                                   loading: state is LoginLoadingState,
-                                  label: 'Masuk',
+                                  label: 'Login',
                                   onPressed: () {
                                     if (state is! LoginLoadingState) {
                                       if (formKey.currentState.validate()) {
@@ -166,7 +166,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 Navigator.push(context, MaterialPageRoute(builder: (context) => RegisterScreen()));
                               },
                               child: Text(
-                                'Dafta sekarang',
+                                'Register',
                                 style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
                               ),
                             ),

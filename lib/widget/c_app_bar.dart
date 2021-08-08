@@ -8,9 +8,8 @@ enum CAppBarActions { Logout }
 class CAppBar extends StatelessWidget {
   final String title;
   final List<CAppBarActions> actions;
-  final isHistory;
 
-  CAppBar({Key key, @required this.title, this.actions, this.isHistory = false}) : super(key: key);
+  CAppBar({Key key, @required this.title, this.actions}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -32,20 +31,7 @@ class CAppBar extends StatelessWidget {
 
     return AppBar(
       backgroundColor: Colors.redAccent,
-      title: Row(
-        children: [
-          if (isHistory)
-            Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: Text('History'),
-            ),
-          Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: Text('User'),
-          ),
-          Text(title),
-        ],
-      ),
+      title: Text(title),
       actions: actions != null ? actions.map((e) => actionWidget(action: e)).toList() : null,
     );
   }

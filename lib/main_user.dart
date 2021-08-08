@@ -5,6 +5,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tracking/models/location_model.dart';
 import 'package:tracking/services/location_service.dart';
 
@@ -58,42 +59,32 @@ void onStart() async {
 
     if (!isDisabled) {
       try {
-        bool isSend = await authService.getIsSend();
+        bool hasUser = await authService.hasUser();
+        if (hasUser) {
+          User user = await authService.getUser();
 
-        if (isSend) {
-          try {
-            bool hasUser = await authService.hasUser();
-            if (hasUser) {
-              User user = await authService.getUser();
-
-              if (user != null) {
-                try {
-                  final locationModel = await GeolocatorService(uid: user.uid).getPosition();
-                  if (locationModel is LocationModel) {
-                    locationModel.createdAt = DateTime.now().millisecondsSinceEpoch;
-                    locationModel.updatedAt = DateTime.now().millisecondsSinceEpoch;
-                    LocationService.saveLocation(locationModel: locationModel);
-                    print({'service': isDisabled, 'send': isSend, 'user': user.email, 'location': locationModel.toJson()}.toString());
-                  } else {
-                    print({'service': isDisabled, 'send': isSend, 'user': user.email, 'location': null}.toString());
-                  }
-                } catch (e) {
-                  print({'service': isDisabled, 'send': isSend, 'user': user.email, 'location': e.toString()}.toString());
-                }
+          if (user != null) {
+            try {
+              final locationModel = await GeolocatorService(uid: user.uid).getPosition();
+              if (locationModel is LocationModel) {
+                locationModel.createdAt = DateTime.now().millisecondsSinceEpoch;
+                locationModel.updatedAt = DateTime.now().millisecondsSinceEpoch;
+                LocationService.saveLocation(locationModel: locationModel);
+                print({'service': !isDisabled, 'user': user.email, 'location': locationModel.toJson()}.toString());
               } else {
-                print({'service': isDisabled, 'send': isSend, 'username': null}.toString());
+                print({'service': !isDisabled, 'user': user.email, 'location': null}.toString());
               }
-            } else {
-              print({'service': isDisabled, 'send': isSend, 'username': null}.toString());
+            } catch (e) {
+              print({'service': !isDisabled, 'user': user.email, 'location': e.toString()}.toString());
             }
-          } catch (e) {
-            print({'service': isDisabled, 'send': isSend, 'username': e.toString()}.toString());
+          } else {
+            print({'service': !isDisabled, 'username': null}.toString());
           }
         } else {
-          print({'service': isDisabled, 'send': isSend}.toString());
+          print({'service': !isDisabled, 'username': null}.toString());
         }
       } catch (e) {
-        print({'service': isDisabled, 'send': e.toString()}.toString());
+        print({'service': !isDisabled, 'username': e.toString()}.toString());
       }
     } else {
       print({'service': isDisabled}.toString());

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'bloc/app/app_bloc.dart';
 import 'config/flavor_config.dart';
