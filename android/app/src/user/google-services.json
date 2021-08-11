@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "206263753431",
+    "project_id": "skripsi-tracking-children",
+    "storage_bucket": "skripsi-tracking-children.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:206263753431:android:988f7c7dc7c1e14ee96e92",
+        "android_client_info": {
+          "package_name": "com.alpinnz.tracking.children.user"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "206263753431-1dluiq6nf81iao16rfv9pokff2j1elra.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCfMmAkZizmg56O3dX3OQd2W6LSR3i3FWc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "206263753431-1dluiq6nf81iao16rfv9pokff2j1elra.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
