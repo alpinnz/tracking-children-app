@@ -23,12 +23,19 @@ class _CInputState extends State<CInput> {
 
   @override
   Widget build(BuildContext context) {
+    final border = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(8),
+      borderSide: BorderSide(
+        color: Colors.redAccent,
+      ),
+    );
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           widget.label,
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(color: Colors.redAccent),
         ),
         SizedBox(height: 8),
         TextFormField(
@@ -38,19 +45,12 @@ class _CInputState extends State<CInput> {
             hintText: widget.hintText ?? widget.label,
             fillColor: Colors.white,
             filled: true,
-            errorStyle: TextStyle(color: Colors.red[50]),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(
-                color: Colors.white,
-              ),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(
-                color: Colors.white,
-              ),
-            ),
+            border: border,
+            disabledBorder: border,
+            focusedErrorBorder: border,
+            errorBorder: border,
+            focusedBorder: border,
+            enabledBorder: border,
             contentPadding: EdgeInsets.symmetric(vertical: 4, horizontal: 16),
           ),
           validator: (value) {

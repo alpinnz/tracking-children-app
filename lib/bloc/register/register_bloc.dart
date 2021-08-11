@@ -22,14 +22,14 @@ class RegisterBloc extends Bloc<RegisterEvent, RegisterState> {
       try {
         yield RegisterLoadingState();
 
-        final user = await authService.signupWithEmail(username: event.username, email: event.email, password: event.password);
-        if (user is User) {
+        bool user = await authService.signupWithEmail(username: event.username, email: event.email, password: event.password);
+        if (user) {
           authService.logOut();
           yield RegisterSuccessState();
           return;
         }
 
-        yield RegisterFailedState(error: 'gagal Register');
+        yield RegisterFailedState(error: 'Gagal Register');
       } on FirebaseAuthException catch (e) {
         String message;
         switch (e.code) {

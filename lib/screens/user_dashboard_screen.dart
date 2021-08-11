@@ -1,22 +1,22 @@
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:children/services/auth_service.dart';
+import 'package:children/widget/c_app_bar.dart';
+import 'package:children/widget/c_button.dart';
+import 'package:children/widget/c_will_pop_scope.dart';
 import 'package:flutter/material.dart';
-import 'package:geocoding/geocoding.dart';
+// import 'package:geocoding/geocoding.dart';
 
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:tracking/services/auth_service.dart';
-import 'package:tracking/widget/c_app_bar.dart';
-import 'package:tracking/widget/c_button.dart';
-import 'package:tracking/widget/c_will_pop_scope.dart';
 
-import '../models/location_model.dart';
-import '../models/user_model.dart';
-import '../services/geolocator_service.dart';
+import '../models/location.dart';
+import '../models/user.dart';
+import '../services/location_service.dart';
 
 class UserDashboardScreen extends StatefulWidget {
-  final UserModel userModel;
-  UserDashboardScreen({Key key, @required this.userModel}) : super(key: key);
+  final User user;
+  UserDashboardScreen({Key key, @required this.user}) : super(key: key);
 
   @override
   _UserDashboardScreenState createState() => _UserDashboardScreenState();
@@ -28,7 +28,6 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
   bool isAktif;
   bool isSend;
   AuthService authService = AuthService();
-  Stream<LocationModel> getLocationStream;
 
   GoogleMapController controller;
 
@@ -69,12 +68,12 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
     return byteData.buffer.asUint8List();
   }
 
-  void updateMarkerAndCircle(LocationModel locationModel, Uint8List imageData) {
+  void updateMarkerAndCircle(Location location, Uint8List imageData) {
     this.setState(() {
       marker = Marker(
           markerId: MarkerId("home"),
-          position: LatLng(locationModel.latitude, locationModel.longitude),
-          rotation: locationModel.heading,
+          position: LatLng(location.latitude, location.longitude),
+          rotation: location.heading,
           draggable: false,
           zIndex: 2,
           flat: true,
@@ -82,15 +81,15 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
           icon: BitmapDescriptor.fromBytes(imageData));
       circle = Circle(
           circleId: CircleId("person"),
-          radius: locationModel.accuracy,
+          radius: location.accuracy,
           zIndex: 1,
           strokeColor: Colors.redAccent,
-          center: LatLng(locationModel.latitude, locationModel.longitude),
+          center: LatLng(location.latitude, location.longitude),
           fillColor: Colors.redAccent.withAlpha(70));
     });
   }
 
-  void updateGMAP(LocationModel locationModel) async {
+  void updateGMAP(Location location) async {
     Uint8List imageData = await getMarker();
 
     if (controller != null) {
@@ -101,15 +100,12 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
 
         controller.animateCamera(
           CameraUpdate.newCameraPosition(
-            CameraPosition(bearing: 192.8334901395799, target: LatLng(locationModel.latitude, locationModel.longitude), tilt: 0, zoom: 18),
+            CameraPosition(bearing: 192.8334901395799, target: LatLng(location.latitude, location.longitude), tilt: 0, zoom: 18),
           ),
         );
 
-        List<Placemark> placemarks = await placemarkFromCoordinates(locationModel.latitude, locationModel.longitude);
-        print('placemarks' + placemarks.first.toJson().toString());
-
-        updateMarkerAndCircle(locationModel, imageData);
-        print('updateGMAP -> ${locationModel.address.streetAddress}');
+        updateMarkerAndCircle(location, imageData);
+        print('updateGMAP -> ${location.address.street}');
       }
 
       await Future.delayed(Duration(seconds: 5));
@@ -122,7 +118,7 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    getLocationStream = GeolocatorService(uid: widget.userModel.uid).locationStream;
+    Stream<Location> locationStream = LocatorService(uid: widget.user.uid).locationStream;
 
     return CWillPopScope(
       child: Scaffold(
@@ -130,7 +126,7 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
         appBar: PreferredSize(
           preferredSize: Size(double.infinity, kToolbarHeight),
           child: CAppBar(
-            title: widget.userModel.username,
+            title: widget.user.username,
             actions: [CAppBarActions.Logout],
           ),
         ),
@@ -144,7 +140,6 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
                 label: 'Aktifkan GPS',
                 onPressed: () async {
                   setState(() {
-                    getLocationStream.asBroadcastStream();
                     isAktif = true;
                   });
                 },
@@ -171,8 +166,8 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
                 ],
               ),
               SizedBox(height: 20),
-              StreamBuilder<LocationModel>(
-                  stream: getLocationStream,
+              StreamBuilder<Location>(
+                  stream: locationStream,
                   builder: (context, snapshot) {
                     if (snapshot.hasData) {
                       if (isAktif) {
@@ -208,6 +203,7 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
                 label: 'Kirim ke Orang Tua',
                 onPressed: () async {
                   if (isAktif) {
+                    authService.setIsSend(value: true);
                     setState(() {
                       isSend = true;
                     });

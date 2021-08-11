@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../bloc/register/register_bloc.dart';
 import '../services/auth_service.dart';
 import '../widget/c_button.dart';
@@ -25,7 +26,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return BlocProvider(
       create: (context) => RegisterBloc(authService: authService),
       child: Scaffold(
-        backgroundColor: Colors.redAccent,
+        backgroundColor: Colors.white,
         body: SafeArea(
           child: Padding(
             padding: EdgeInsets.all(20),
@@ -38,7 +39,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         Text(
                           'Register Anak',
                           style: TextStyle(
-                            color: Colors.white,
+                            color: Colors.redAccent,
                             fontSize: 36,
                             fontWeight: FontWeight.w900,
                             letterSpacing: 1.5,
@@ -48,7 +49,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         Expanded(
                           child: Divider(
                             thickness: 3,
-                            color: Colors.white,
+                            color: Colors.redAccent,
                           ),
                         ),
                       ],
@@ -56,7 +57,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     Text(
                       'Selamat datang',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: Colors.redAccent,
                         fontWeight: FontWeight.w300,
                         fontSize: 24,
                         letterSpacing: 5,
@@ -112,7 +113,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 Navigator.of(context).pop();
                                 ScaffoldMessenger.of(context).hideCurrentSnackBar();
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('Daftar telah berhasil!!!')),
+                                  SnackBar(content: Text('Register berhasil')),
                                 );
                               }
                             },
@@ -130,7 +131,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                     } else {
                                       ScaffoldMessenger.of(context).hideCurrentSnackBar();
                                       ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(content: Text('tidak boleh kosong username, email, password')),
+                                        SnackBar(content: Text('Tidak boleh kosong username, email, password')),
                                       );
                                     }
                                   }
@@ -154,16 +155,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       children: <Widget>[
                         Text(
                           'Sudah memiliki akun ?',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                        GestureDetector(
-                          onTap: () {
-                            Navigator.of(context).pop();
-                          },
-                          child: Text(
-                            'Login',
-                            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+                          style: TextStyle(
+                            color: Colors.redAccent,
                           ),
+                        ),
+                        BlocBuilder<RegisterBloc, RegisterState>(
+                          builder: (context, state) {
+                            return GestureDetector(
+                              onTap: () {
+                                if (state is! RegisterLoadingState) {
+                                  Navigator.of(context).pop();
+                                }
+                              },
+                              child: Text('Login',
+                                  style: TextStyle(
+                                    color: Colors.black,
+                                    fontWeight: FontWeight.w700,
+                                  )),
+                            );
+                          },
                         ),
                       ],
                     ),

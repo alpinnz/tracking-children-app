@@ -3,24 +3,21 @@ import 'package:flutter/material.dart';
 enum Flavor { USER, ADMIN }
 
 class FlavorValues {
-  FlavorValues({@required this.baseUrl});
+  FlavorValues({this.baseUrl});
 
   final String baseUrl;
   //Add other flavor specific values, e.g database name
 }
 
 class FlavorConfig {
-  factory FlavorConfig({
-    @required Flavor flavor,
-    @required FlavorValues values,
-  }) {
-    _instance ??= FlavorConfig._internal(flavor, 'Tracking Children ${flavor == Flavor.ADMIN ? ' Admin' : ''}', values);
+  factory FlavorConfig({@required Flavor flavor, @required String appName, @required FlavorValues values}) {
+    _instance ??= FlavorConfig._internal(flavor, appName, values);
     return _instance;
   }
 
-  FlavorConfig._internal(this.flavor, this.name, this.values);
+  FlavorConfig._internal(this.flavor, this.appName, this.values);
   final Flavor flavor;
-  final String name;
+  final String appName;
   final FlavorValues values;
 
   static FlavorConfig _instance;

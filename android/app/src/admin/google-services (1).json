@@ -7,9 +7,9 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:206263753431:android:4849b016895948aae96e92",
+        "mobilesdk_app_id": "1:206263753431:android:f21f77bbc411fd72e96e92",
         "android_client_info": {
-          "package_name": "com.alpinnz.tracking.admin"
+          "package_name": "com.alpinnz.tracking.children.admin"
         }
       },
       "oauth_client": [
@@ -36,9 +36,9 @@
     },
     {
       "client_info": {
-        "mobilesdk_app_id": "1:206263753431:android:c8772f902046fb36e96e92",
+        "mobilesdk_app_id": "1:206263753431:android:988f7c7dc7c1e14ee96e92",
         "android_client_info": {
-          "package_name": "com.alpinnz.tracking.user"
+          "package_name": "com.alpinnz.tracking.children.user"
         }
       },
       "oauth_client": [

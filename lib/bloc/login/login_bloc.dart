@@ -2,12 +2,12 @@ import 'dart:async';
 
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:flutter/cupertino.dart';
 import 'package:meta/meta.dart';
 
 import '../../config/flavor_config.dart';
-import '../../models/user_model.dart';
+import '../../models/user.dart';
 import '../../services/auth_service.dart';
 import '../app/app_bloc.dart';
 
@@ -27,34 +27,32 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
       try {
         yield LoginLoadingState();
 
-        final user = await authService.signInWithEmail(email: event.email, password: event.password);
-        if (user is User) {
-          final userModel = await authService.saveUser(user: user);
-          if (userModel is UserModel) {
-            if (FlavorConfig.isAdmin()) {
-              if (userModel.role == 'admin') {
-                appBloc..add(AppLoginEvent(user: user, userModel: userModel));
-                yield LoginSuccessState(user: user, userModel: userModel);
-                return;
-              } else {
-                authService.logOut();
-              }
-            }
+        final firebaseAuthUser = await authService.signInWithEmail(email: event.email, password: event.password);
+        if (firebaseAuthUser is firebase_auth.User) {
+          User user = await authService.saveUser(firebaseAuthUser: firebaseAuthUser);
 
-            if (FlavorConfig.isUser()) {
-              if (userModel.role == 'user') {
-                appBloc..add(AppLoginEvent(user: user, userModel: userModel));
-                yield LoginSuccessState(user: user, userModel: userModel);
-                return;
-              } else {
-                authService.logOut();
-              }
+          if (FlavorConfig.isAdmin()) {
+            if (user.role == 'admin') {
+              appBloc..add(AppLoginEvent(user: user));
+              yield LoginSuccessState(user: user);
+              return;
+            } else {
+              authService.logOut();
+            }
+          }
+          if (FlavorConfig.isUser()) {
+            if (user.role == 'user') {
+              appBloc..add(AppLoginEvent(user: user));
+              yield LoginSuccessState(user: user);
+              return;
+            } else {
+              authService.logOut();
             }
           }
         }
 
-        yield LoginFailedState(error: 'gagal login');
-      } on FirebaseAuthException catch (e) {
+        yield LoginFailedState(error: 'Gagal login');
+      } on firebase_auth.FirebaseAuthException catch (e) {
         String message;
         switch (e.code) {
           case 'invalid-email':

@@ -1,4 +1,4 @@
-class UserModel {
+class User {
   String uid;
   String username;
   String email;
@@ -7,7 +7,7 @@ class UserModel {
   int createdAt;
   int updatedAt;
 
-  UserModel({
+  User({
     this.uid,
     this.username,
     this.email,
@@ -17,7 +17,7 @@ class UserModel {
     this.updatedAt,
   });
 
-  UserModel.fromJson(Map<String, dynamic> json) {
+  User.fromJson(Map<String, dynamic> json) {
     uid = json['uid'] ?? null;
     username = json['username'] ?? null;
     email = json['email'] ?? null;

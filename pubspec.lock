@@ -198,13 +198,6 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
-  geocode:
-    dependency: "direct main"
-    description:
-      name: geocode
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "1.0.1"
   geocoding:
     dependency: "direct main"
     description:
@@ -267,14 +260,7 @@ packages:
       name: google_maps_flutter_platform_interface
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "2.1.0"
-  http:
-    dependency: transitive
-    description:
-      name: http
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "0.13.3"
+    version: "2.1.1"
   http_parser:
     dependency: transitive
     description:
@@ -352,13 +338,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.0.3"
-  pedantic:
-    dependency: transitive
-    description:
-      name: pedantic
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "1.11.1"
   platform:
     dependency: transitive
     description:

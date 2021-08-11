@@ -13,8 +13,7 @@ class AppLoadingState extends AppState {}
 
 class AppAuthenticatedState extends AppState {
   final User user;
-  final UserModel userModel;
-  AppAuthenticatedState({@required this.user, @required this.userModel});
+  AppAuthenticatedState({@required this.user});
 }
 
 class AppUnauthenticatedState extends AppState {

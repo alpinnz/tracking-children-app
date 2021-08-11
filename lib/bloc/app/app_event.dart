@@ -11,8 +11,7 @@ class AppStartedEvent extends AppEvent {}
 
 class AppLoginEvent extends AppEvent {
   final User user;
-  final UserModel userModel;
-  AppLoginEvent({@required this.user, @required this.userModel});
+  AppLoginEvent({@required this.user});
 }
 
 class AppLogoutEvent extends AppEvent {}

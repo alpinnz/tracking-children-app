@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../bloc/app/app_bloc.dart';
 
+import '../bloc/app/app_bloc.dart';
 import '../bloc/login/login_bloc.dart';
 import '../config/flavor_config.dart';
 import '../services/auth_service.dart';
@@ -29,7 +29,7 @@ class _LoginScreenState extends State<LoginScreen> {
     return BlocProvider(
       create: (context) => LoginBloc(authService: authService, appBloc: BlocProvider.of<AppBloc>(context)),
       child: Scaffold(
-        backgroundColor: Colors.redAccent,
+        backgroundColor: Colors.white,
         body: CWillPopScope(
           child: SafeArea(
             child: Padding(
@@ -44,7 +44,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             Text(
                               'Login Orang Tua',
                               style: TextStyle(
-                                color: Colors.white,
+                                color: Colors.redAccent,
                                 fontSize: 36,
                                 fontWeight: FontWeight.w900,
                                 letterSpacing: 1.5,
@@ -54,7 +54,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             Text(
                               'Login Anak',
                               style: TextStyle(
-                                color: Colors.white,
+                                color: Colors.redAccent,
                                 fontSize: 36,
                                 fontWeight: FontWeight.w900,
                                 letterSpacing: 1.5,
@@ -64,7 +64,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           Expanded(
                             child: Divider(
                               thickness: 3,
-                              color: Colors.white,
+                              color: Colors.redAccent,
                             ),
                           ),
                         ],
@@ -72,7 +72,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       Text(
                         'Selamat datang',
                         style: TextStyle(
-                          color: Colors.white,
+                          color: Colors.redAccent,
                           fontWeight: FontWeight.w300,
                           fontSize: 24,
                           letterSpacing: 5,
@@ -116,7 +116,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 if (state is LoginSuccessState) {
                                   ScaffoldMessenger.of(context).hideCurrentSnackBar();
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text('Masuk telah berhasil!!!')),
+                                    SnackBar(content: Text('Login berhasil')),
                                   );
                                 }
                               },
@@ -133,7 +133,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                       } else {
                                         ScaffoldMessenger.of(context).hideCurrentSnackBar();
                                         ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(content: Text('tidak boleh kosong email, password')),
+                                          SnackBar(content: Text('Tidak boleh kosong email, password')),
                                         );
                                       }
                                     }
@@ -158,17 +158,26 @@ class _LoginScreenState extends State<LoginScreen> {
                           if (FlavorConfig.isUser())
                             Text(
                               'Tidak punya akun ?',
-                              style: TextStyle(color: Colors.white),
+                              style: TextStyle(color: Colors.redAccent),
                             ),
                           if (FlavorConfig.isUser())
-                            GestureDetector(
-                              onTap: () {
-                                Navigator.push(context, MaterialPageRoute(builder: (context) => RegisterScreen()));
+                            BlocBuilder<LoginBloc, LoginState>(
+                              builder: (context, state) {
+                                return GestureDetector(
+                                  onTap: () {
+                                    if (state is! LoginLoadingState) {
+                                      Navigator.push(context, MaterialPageRoute(builder: (context) => RegisterScreen()));
+                                    }
+                                  },
+                                  child: Text(
+                                    'Register',
+                                    style: TextStyle(
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                );
                               },
-                              child: Text(
-                                'Register',
-                                style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
-                              ),
                             ),
                         ],
                       ),

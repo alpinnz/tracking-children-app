@@ -5,16 +5,14 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:tracking/models/location_model.dart';
-import 'package:tracking/services/location_service.dart';
 
 import 'bloc/app/app_bloc.dart';
 import 'config/bloc_config.dart';
 import 'config/flavor_config.dart';
 import 'main_app.dart';
+import 'models/location.dart';
 import 'services/auth_service.dart';
-import 'services/geolocator_service.dart';
+import 'services/location_service.dart';
 
 final AuthService authService = AuthService();
 
@@ -27,24 +25,21 @@ Future<Null> main() async {
   await FlutterBackgroundService.initialize(onStart, autoStart: true, foreground: false);
 
   FlavorConfig(
+    appName: 'Lokasi Anak',
     flavor: Flavor.USER,
-    values: FlavorValues(
-      baseUrl: '',
-    ),
+    values: FlavorValues(),
   );
 
   return runApp(
     BlocProvider(
-      create: (context) => AppBloc(
-        authService: authService,
-      )..add(AppStartedEvent()),
+      create: (context) => AppBloc(authService: authService)..add(AppStartedEvent()),
       child: MainApp(),
     ),
   );
 }
 
 void onStart() async {
-  bool isDisabled = false;
+  bool isRunning = true;
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
 
@@ -53,11 +48,11 @@ void onStart() async {
   Timer.periodic(Duration(seconds: 5), (timer) async {
     if (!(await service.isServiceRunning())) timer.cancel();
     service.setNotificationInfo(
-      title: "My App Service",
+      title: "Lokasi Anak",
       content: "Updated at ${DateTime.now()}",
     );
 
-    if (!isDisabled) {
+    if (isRunning) {
       try {
         bool hasUser = await authService.hasUser();
         if (hasUser) {
@@ -65,29 +60,29 @@ void onStart() async {
 
           if (user != null) {
             try {
-              final locationModel = await GeolocatorService(uid: user.uid).getPosition();
-              if (locationModel is LocationModel) {
-                locationModel.createdAt = DateTime.now().millisecondsSinceEpoch;
-                locationModel.updatedAt = DateTime.now().millisecondsSinceEpoch;
-                LocationService.saveLocation(locationModel: locationModel);
-                print({'service': !isDisabled, 'user': user.email, 'location': locationModel.toJson()}.toString());
+              Location location = await LocatorService(uid: user.uid).getLocation();
+              if (location is Location) {
+                location.createdAt = DateTime.now().millisecondsSinceEpoch;
+                location.updatedAt = DateTime.now().millisecondsSinceEpoch;
+                LocatorService.saveLocation(location: location);
+                print({'service': isRunning, 'email': user.email, 'location': location.toJson()});
               } else {
-                print({'service': !isDisabled, 'user': user.email, 'location': null}.toString());
+                print({'service': isRunning, 'email': user.email, 'location': null});
               }
             } catch (e) {
-              print({'service': !isDisabled, 'user': user.email, 'location': e.toString()}.toString());
+              print({'service': isRunning, 'email': user.email, 'location': e.toString()});
             }
           } else {
-            print({'service': !isDisabled, 'username': null}.toString());
+            print({'service': isRunning, 'email': null});
           }
         } else {
-          print({'service': !isDisabled, 'username': null}.toString());
+          print({'service': isRunning, 'email': null});
         }
       } catch (e) {
-        print({'service': !isDisabled, 'username': e.toString()}.toString());
+        print({'service': isRunning, 'email': e.toString()});
       }
     } else {
-      print({'service': isDisabled}.toString());
+      print({'service': isRunning});
     }
   });
 }

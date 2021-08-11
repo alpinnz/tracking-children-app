@@ -1,4 +1,4 @@
-name: tracking
+name: children
 description: A new Flutter project.
 
 # The following line prevents the package from being accidentally published to
@@ -26,14 +26,12 @@ dependencies:
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
-  cupertino_icons: ^1.0.3
+  cupertino_icons: ^1.0.2
   firebase_core: ^1.4.0
   firebase_auth: ^3.0.1
   cloud_firestore: ^2.4.0
   device_info: ^2.0.2
   package_info: ^2.0.2
-  # location: ^4.3.0
-  geocode: ^1.0.1
   google_maps_flutter: ^2.0.6
   intl: ^0.17.0
   bloc: ^7.0.0

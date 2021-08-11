@@ -3,17 +3,17 @@ import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+
+import '../models/location.dart';
+import '../models/user.dart';
 import '../widget/c_app_bar.dart';
 import '../widget/c_button.dart';
 import '../widget/c_will_pop_scope.dart';
-
-import '../models/location_model.dart';
-import '../models/user_model.dart';
 import 'admin_history_screen.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
-  final UserModel userModel;
-  AdminDashboardScreen({Key key, @required this.userModel}) : super(key: key);
+  final User user;
+  AdminDashboardScreen({Key key, @required this.user}) : super(key: key);
 
   @override
   _AdminDashboardScreenState createState() => _AdminDashboardScreenState();
@@ -30,7 +30,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   CameraPosition initialLocation;
 
   String selectedUsername;
-  UserModel selectedUserModel;
+  User selectedUser;
   final Stream<QuerySnapshot> usersStream = FirebaseFirestore.instance.collection('users').snapshots();
 
   final Stream<QuerySnapshot> locationsStream = FirebaseFirestore.instance.collection('locations').snapshots();
@@ -50,12 +50,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     return byteData.buffer.asUint8List();
   }
 
-  void updateMarkerAndCircle(LocationModel locationModel, Uint8List imageData) {
+  void updateMarkerAndCircle(Location location, Uint8List imageData) {
     this.setState(() {
       marker = Marker(
           markerId: MarkerId("home"),
-          position: LatLng(locationModel.latitude, locationModel.longitude),
-          rotation: locationModel.heading,
+          position: LatLng(location.latitude, location.longitude),
+          rotation: location.heading,
           draggable: false,
           zIndex: 2,
           flat: true,
@@ -63,15 +63,15 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           icon: BitmapDescriptor.fromBytes(imageData));
       circle = Circle(
           circleId: CircleId("person"),
-          radius: locationModel.accuracy,
+          radius: location.accuracy,
           zIndex: 1,
           strokeColor: Colors.redAccent,
-          center: LatLng(locationModel.latitude, locationModel.longitude),
+          center: LatLng(location.latitude, location.longitude),
           fillColor: Colors.redAccent.withAlpha(70));
     });
   }
 
-  void getCurrentLocation(LocationModel locationModel) async {
+  void getCurrentLocation(Location location) async {
     Uint8List imageData = await getMarker();
 
     if (controller != null) {
@@ -82,20 +82,26 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
         controller.animateCamera(
           CameraUpdate.newCameraPosition(
-            CameraPosition(bearing: 192.8334901395799, target: LatLng(locationModel.latitude, locationModel.longitude), tilt: 0, zoom: 18),
+            CameraPosition(bearing: 192.8334901395799, target: LatLng(location.latitude, location.longitude), tilt: 0, zoom: 18),
           ),
         );
 
-        updateMarkerAndCircle(locationModel, imageData);
-        // print(locationModel.toJson().toString());
+        updateMarkerAndCircle(location, imageData);
       }
 
       await Future.delayed(Duration(seconds: 5));
 
-      setState(() {
-        isLoading = false;
-        isHistory = true;
-      });
+      if (isGet) {
+        setState(() {
+          isLoading = false;
+          isHistory = true;
+        });
+      } else {
+        setState(() {
+          isHistory = false;
+          isGet = false;
+        });
+      }
     }
   }
 
@@ -106,7 +112,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       appBar: PreferredSize(
         preferredSize: Size(double.infinity, kToolbarHeight),
         child: CAppBar(
-          title: 'Orang tua',
+          title: 'Orang Tua',
           actions: [CAppBarActions.Logout],
         ),
       ),
@@ -127,23 +133,22 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                       return Text("Loading...");
                     }
 
-                    List<UserModel> userModels = [];
+                    List<User> users = [];
 
                     snapshot.data.docs.forEach((e) {
-                      UserModel user = UserModel.fromJson(e.data());
+                      User user = User.fromJson(e.data());
                       if (user.role == 'user') {
-                        userModels.add(user);
+                        users.add(user);
                       }
                     });
-                    List<String> listUsername = userModels.map((e) => e.username).toList();
+                    List<String> usernames = users.map((e) => e.username).toList();
 
-                    userModels.add(UserModel(username: 'Username'));
                     return DropdownButton<String>(
-                      value: listUsername.contains(selectedUsername) ? selectedUsername : null,
+                      value: usernames.contains(selectedUsername) ? selectedUsername : null,
                       icon: Icon(Icons.arrow_drop_down_sharp),
-                      hint: Text('pilih anak', style: TextStyle(color: Colors.grey)),
+                      hint: Text('Pilih Anak', style: TextStyle(color: Colors.grey)),
                       isExpanded: true,
-                      items: listUsername.map((String item) {
+                      items: usernames.map((String item) {
                         return DropdownMenuItem<String>(
                           child: Row(
                             children: [
@@ -163,10 +168,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                         color: Colors.redAccent,
                       ),
                       onChanged: (String newValue) {
-                        print(newValue);
                         setState(() {
                           selectedUsername = newValue;
-                          selectedUserModel = userModels.singleWhere((e) => e.username == newValue);
+                          selectedUser = users.singleWhere((e) => e.username == newValue);
                           isGet = false;
                           isHistory = false;
                         });
@@ -210,17 +214,17 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   stream: locationsStream,
                   builder: (context, snapshot) {
                     if (snapshot.hasData) {
-                      if (selectedUserModel != null) {
-                        List<LocationModel> listLocationModel = snapshot.data.docs.map((e) => LocationModel.fromJson(e.data())).toList();
-                        listLocationModel.sort((a, b) => a.createdAt.compareTo(b.createdAt));
-                        List<LocationModel> userLocationModel =
-                            listLocationModel.where((e) => e.uid == (selectedUserModel != null ? selectedUserModel.uid : 'not found')).toList();
+                      if (selectedUser != null) {
+                        List<Location> listLocation = snapshot.data.docs.map((e) => Location.fromJson(e.data())).toList();
+                        listLocation.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+                        List<Location> userLocation =
+                            listLocation.where((e) => e.uid == (selectedUser != null ? selectedUser.uid : 'not found')).toList();
                         if (isGet) {
                           print('get location ');
                           Future.delayed(Duration(seconds: 3), () {
-                            getCurrentLocation(userLocationModel.last);
+                            getCurrentLocation(userLocation.last);
                           });
-                          if (userLocationModel.length > 1) {
+                          if (userLocation.length > 1) {
                             return Expanded(
                               child: Container(
                                 width: double.infinity,
@@ -245,25 +249,25 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                             );
                           } else {
                             return Expanded(
-                              child: Center(child: Text('data lokasi anak ${selectedUserModel.username} tidak ada')),
+                              child: Center(child: Text('Lokasi Anak ${selectedUser.username} tidak ada')),
                             );
                           }
                         } else {
                           return Expanded(
-                            child: Center(child: Text('tekan tombol Posisi Anak')),
+                            child: Center(child: Text('Tekan Posisi Anak')),
                           );
                         }
                       }
                     }
-                    return Expanded(child: Center(child: Text('Pilih anak')));
+                    return Expanded(child: Center(child: Text('Pilih Anak')));
                   }),
               SizedBox(height: 20),
               CButton(
-                disabled: !isHistory || selectedUserModel == null,
-                label: 'History lokasi anak',
+                disabled: !isHistory || selectedUser == null,
+                label: 'History Lokasi Anak',
                 onPressed: () async {
-                  if (isHistory && selectedUserModel != null) {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => AdminHistoryScreen(userModel: selectedUserModel)));
+                  if (isHistory && selectedUser != null) {
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => AdminHistoryScreen(user: selectedUser)));
                   }
                 },
               )

@@ -13,8 +13,7 @@ class LoginLoadingState extends LoginState {}
 
 class LoginSuccessState extends LoginState {
   final User user;
-  final UserModel userModel;
-  LoginSuccessState({@required this.user, @required this.userModel});
+  LoginSuccessState({@required this.user});
 }
 
 class LoginFailedState extends LoginState {

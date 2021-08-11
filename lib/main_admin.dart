@@ -16,17 +16,14 @@ Future<Null> main() async {
   Bloc.observer = BlocConfig();
 
   FlavorConfig(
+    appName: 'Monitoring Anak',
     flavor: Flavor.ADMIN,
-    values: FlavorValues(
-      baseUrl: '',
-    ),
+    values: FlavorValues(),
   );
 
   return runApp(
     BlocProvider(
-      create: (context) => AppBloc(
-        authService: authService,
-      )..add(AppStartedEvent()),
+      create: (context) => AppBloc(authService: authService)..add(AppStartedEvent()),
       child: MainApp(),
     ),
   );
