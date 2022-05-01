@@ -16,7 +16,7 @@ import 'services/location_service.dart';
 
 final AuthService authService = AuthService();
 
-Future<Null> main() async {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   Bloc.observer = BlocConfig();
 
@@ -30,7 +30,7 @@ Future<Null> main() async {
     values: FlavorValues(),
   );
 
-  return runApp(
+  runApp(
     BlocProvider(
       create: (context) => AppBloc(authService: authService)..add(AppStartedEvent()),
       child: MainApp(),
